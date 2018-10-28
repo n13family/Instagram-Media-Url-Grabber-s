@@ -28,7 +28,7 @@ usage() {
   echo "Usage: ./myscript.sh COMMANDS: [-i <list.txt>] [-r <folder/>] [-l {1-1000}] [-t {1-10}] OPTIONS: [-d] [-c]
 
 Command:
--i (20k-US.txt)     File input that contain email to check
+-i (20k-US.txt)     File input that contain phone number to check
 -r (result/)        Folder to store the result live.txt and die.txt
 -l (60|90|110)      How many list you want to send per delayTime
 -t (3|5|8)          Sleep for -t when check is reach -l fold
@@ -147,14 +147,14 @@ n13_paytm() {
   basd="$(echo "$check" | grep -c 'Bad Request')"
 
   if [[ $val > 0 || $icl > 0 ]]; then
-    printf "${GRN}[LIVE] => $1 ${NC}\n"
+    printf "${GRN}[LIVE] => $1 [ $3 ] ${NC}\n"
     echo "LIVE => $1" >> $2/live.txt
   else
     if [[ $inv > 0 || $bad > 0 || basd > 0 ]]; then
-      printf "${RED}[DIE] => $1 ${NC}\n"
+      printf "${RED}[DIE] => $1 [ $3 ] ${NC}\n"
       echo "DIE => $1" >> $2/die.txt
     else
-      printf "${CYAN}[UNKNOWN] => $1 ${NC}\n"
+      printf "${CYAN}[UNKNOWN] => $1 [ $3 ] ${NC}\n"
       echo "$1 => $check" >> reason.txt
     fi
   fi
@@ -164,23 +164,20 @@ n13_paytm() {
 
 
 # Preparing file list 
-# by using email pattern 
+# by using phone number pattern 
 # every line in $inputFile
 
 # Fi
-# Finding match mail provider
 echo "########################################"
-# Print total line of mailist
-# Extract email per line
-# from both input file
+
 con=1
 
-echo "[+] Sending $sendList email per $perSec seconds"
+echo "[+] Sending $sendList phone number per $perSec seconds"
 
 for (( i = $inputStart; i < $inputEnd; i++ )); do
   nomorsatu="$i"
   indexer=$((con++))
-  tot=$((totalLines--))
+  tot=$((inputEnd--))
   fold=`expr $i % $sendList`
   if [[ $fold == 0 && $i > 0 ]]; then
     header="`date +%H:%M:%S`"
@@ -191,7 +188,7 @@ for (( i = $inputStart; i < $inputEnd; i++ )); do
   vander=`expr $i % 8`
 
   
-  n13_paytm "$nomorsatu" "$targetFolder" &
+  n13_paytm "$nomorsatu" "$targetFolder" "$tot" &
 
 done 
 
