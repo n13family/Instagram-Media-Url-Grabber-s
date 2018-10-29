@@ -221,7 +221,6 @@ for (( i = 0; i < "${#mailist[@]}"; i++ )); do
   if [[ $fold == 0 && $i > 0 ]]; then
     header="`date +%H:%M:%S`"
     duration=$SECONDS
-    echo "Waiting $perSec second. $(($duration / 3600)) hours $(($duration / 60 % 60)) minutes and $(($duration % 60)) seconds elapsed, With $sendList req / $perSec seconds."
     sleep $perSec
   fi
   vander=`expr $i % 8`

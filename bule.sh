@@ -173,11 +173,11 @@ echo "########################################"
 con=1
 
 echo "[+] Sending $sendList phone number per $perSec seconds"
-
+dor=$inputEnd-$inputStart
 for (( i = $inputStart; i < $inputEnd; i++ )); do
   nomorsatu="$i"
   indexer=$((con++))
-  tot=$((inputEnd--))
+  tot=$((dor--))
   fold=`expr $i % $sendList`
   if [[ $fold == 0 && $i > 0 ]]; then
     header="`date +%H:%M:%S`"
